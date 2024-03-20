@@ -10,6 +10,8 @@ app.use(express.urlencoded({ limit: '25mb' }));
 app.use(cors({ origin: true, credentials: true }));
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`The server has started on port: ${PORT}`));
+const sgMail = require('@sendgrid/mail');
+sgMail.setApiKey(process.env.SEND_GRID_API_KEY)
 mongoose.connect(
     process.env.MONGODB_CONNECTION_STRING,
     {
