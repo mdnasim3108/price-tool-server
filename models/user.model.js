@@ -1,9 +1,6 @@
 let mongoose = require('mongoose')
 let userSchema=new mongoose.Schema({
-    id:{type:String},
-    Name:{type:String},
-    email:{type:String},
-    password:{type:String},
-    expenses:{type:Array}
+    userName:{type:String},
+    email:{type:String}
 });
-module.exports=User=mongoose.model("expenseTrackerUsers",userSchema);
+module.exports=Users=mongoose.model("Users",userSchema);
