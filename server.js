@@ -117,28 +117,3 @@ app.post("/getEnquiries",async(req,res)=>{
     }
 })
 
-// app.post('/signUp', async (req, res) => {
-//     try {
-//         let { Name, email, password } = req.body
-//         const id=email+password
-//         const data = new Users({ Name, email, password,id })
-//         const updatedUsers = await data.save()
-//         res.json(updatedUsers)
-//     }
-//     catch (err) {
-//         console.log(err)
-//     }
-// })
-// app.post("/getExpense",async (req, res) => {
-//     const {Name}=req.body;
-//     const userExpense=await Users.findOne({Name})
-//     res.send(userExpense)
-// })
-// app.post('/addExpense',async(req,res)=>{
-//         let {item,Name}=req.body;
-//         let userDet=await Users.findOne({Name})
-//         let prev=userDet.expenses
-//         let newArr=[...prev,item]
-//         let updatedArr=await Users.updateOne({Name},{$set:{expenses:newArr}})
-//         res.send(updatedArr)
-// })
