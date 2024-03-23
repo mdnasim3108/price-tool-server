@@ -3,7 +3,6 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const Users = require("./models/user.model");
 const Enquiries= require("./models/enquiry.model");
-const { response, request } = require("express");
 require("dotenv").config();
 const app = express();
 app.use(express.json({ limit: '25mb' }));
@@ -12,6 +11,7 @@ app.use(cors({ origin: true, credentials: true }));
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`The server has started on port: ${PORT}`));
 const sgMail = require('@sendgrid/mail');
+const { fetchPrice } = require("./utils/fetchPrice");
 sgMail.setApiKey(process.env.SEND_GRID_API_KEY)
 mongoose.connect(
     process.env.MONGODB_CONNECTION_STRING,
@@ -28,7 +28,12 @@ app.get("/",(req,res)=>{
     res.send("hello world");
 })
 
-
+const vmInfo=[
+    {productId:1,productName:"Virtual Machines Dv3 Series",skuName:"D8 v3"},
+    {productId:2,productName:"Virtual Machines DSv3 Series",skuName:"D4s v3"},
+    {productId:3,productName:"Virtual Machines DSv3 Series",skuName:"D4s v3"},
+    {productId:4,productName:"Virtual Machines DSv3 Series",skuName:"D8s v3"},
+]
 app.post("/createUser", async (req, res) => {
     try {
         let { userName,email } = req.body;
@@ -52,7 +57,7 @@ app.post("/verify",(req,res)=>{
             <p>Hello <b>${userName}</b></p>
             <p>Let's complete your verification process.</p>
             <p>Please use the below OTP for Authentication</p>
-            <h1>OTP : ${OTP}<h1/>
+            <h1>OTP : ${OTP}<h1/>   
       `
     };
   
@@ -69,7 +74,15 @@ app.post("/verify",(req,res)=>{
 app.post("/createEnquiry",async(req,res)=>{
     try {
         const {email,info,products}=req.body;
-        const data = new Enquiries({ email,products,...info })
+        console.log(info)
+        console.log(products)
+        for(let i=0;i<products.length;i++){
+            const vm=vmInfo.find(vm=>vm.productId==products[i].id)
+            const price=await fetchPrice(vm.productName,vm.skuName,products[i].term)
+            products[i]={...products[i],price}
+        }
+        const totalPrice=products.reduce((acc,curr)=>acc+curr.price,0)
+        const data = new Enquiries({ email,products,totalPrice,...info })
         const enquiry = await data.save()
         res.json(enquiry)
     }
@@ -82,19 +95,21 @@ app.post("/createEnquiry",async(req,res)=>{
 
 app.post("/getEnquiries",async(req,res)=>{
     try{ 
+        
         const {email}=req.body;
 
         const enquires=await Enquiries.find({email})
         if(enquires.length){
             const data=enquires.map(enquiry=>{
-                const {oppurtunity,csp,region,products}=enquiry
+                const {oppurtunity,csp,region,products,totalPrice,createdAt}=enquiry
                 return {
-                    oppurtunity,csp,region,products
+                    oppurtunity,csp,region,products,totalPrice,createdAt
                 }  
             })
             return res.send(data)
         }
         res.send(enquires)
+        res.send()
     }
     catch (err) {
         console.error(err);
