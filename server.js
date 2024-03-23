@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const Users = require("./models/user.model");
+const Enquiries= require("./models/enquiry.model");
 const { response, request } = require("express");
 require("dotenv").config();
 const app = express();
@@ -18,7 +19,7 @@ mongoose.connect(
         useNewUrlParser: true,
         useUnifiedTopology: true,
     },
-    (err) => {
+    (err) => {  
         if (err) throw err;
         console.log("MongoDB connection established");
     }
@@ -28,7 +29,7 @@ app.get("/",(req,res)=>{
 })
 
 
-app.post("/create", async (req, res) => {
+app.post("/createUser", async (req, res) => {
     try {
         let { userName,email } = req.body;
         const data = new Users({ userName,email })
@@ -38,7 +39,69 @@ app.post("/create", async (req, res) => {
     catch (err) {
         console.log(err)
     }
+})  
+
+app.post("/verify",(req,res)=>{
+    const { to,userName } = req.body;
+    const OTP=Math.floor(Math.random()*1000000)
+    const msg = {
+      to,
+      from: 'mohamednasim3108@gmail.com',
+      subject:"Email verification",
+      html:`
+            <p>Hello <b>${userName}</b></p>
+            <p>Let's complete your verification process.</p>
+            <p>Please use the below OTP for Authentication</p>
+            <h1>OTP : ${OTP}<h1/>
+      `
+    };
+  
+    sgMail.send(msg)  
+      .then(() => {
+        res.status(200).json({ otp:OTP });
+      })
+      .catch((error) => {
+        console.error(error);
+        res.status(500).json({ error });
+      });
 })
+
+app.post("/createEnquiry",async(req,res)=>{
+    try {
+        const {email,info,products}=req.body;
+        const data = new Enquiries({ email,products,...info })
+        const enquiry = await data.save()
+        res.json(enquiry)
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ err });
+    }
+})
+
+
+app.post("/getEnquiries",async(req,res)=>{
+    try{ 
+        const {email}=req.body;
+
+        const enquires=await Enquiries.find({email})
+        if(enquires.length){
+            const data=enquires.map(enquiry=>{
+                const {oppurtunity,csp,region,products}=enquiry
+                return {
+                    oppurtunity,csp,region,products
+                }  
+            })
+            return res.send(data)
+        }
+        res.send(enquires)
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ err });
+    }
+})
+
 // app.post('/signUp', async (req, res) => {
 //     try {
 //         let { Name, email, password } = req.body
