@@ -7,4 +7,4 @@ let enquirySchema=new mongoose.Schema({
     products:{type:Array},
     totalPrice:{type:Number},
 },{ timestamps: true });
-module.exports=Users=mongoose.model("Enquiries",enquirySchema);
+module.exports=Users=mongoose.model("Enquiries",enquirySchema);  
