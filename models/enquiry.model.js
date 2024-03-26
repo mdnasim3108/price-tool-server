@@ -6,5 +6,6 @@ let enquirySchema=new mongoose.Schema({
     region:{type:String},
     products:{type:Array},
     totalPrice:{type:Number},
-},{ timestamps: true });
+    time:{type:String}
+});
 module.exports=Users=mongoose.model("Enquiries",enquirySchema);  

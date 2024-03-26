@@ -14,6 +14,8 @@ const sgMail = require('@sendgrid/mail');
 const { fetchPrice } = require("./utils/fetchPrice");
 const {fetchRegions}=require("./utils/fetchRegions");
 sgMail.setApiKey(process.env.SEND_GRID_API_KEY)
+const axios=require("axios")
+
 mongoose.connect(
     process.env.MONGODB_CONNECTION_STRING,
     {
@@ -33,6 +35,8 @@ app.get("/fetchRegions",async(req,res)=>{
     const regions=await fetchRegions()
     res.send(regions)
 })
+
+
   
 
 const productInfo={
@@ -84,22 +88,19 @@ app.post("/verifyUser",(req,res)=>{
 
 app.post("/createEnquiry",async(req,res)=>{
     try {
-        const {email,info,products}=req.body;
-        console.log(info)
-        console.log(products)
+        const {email,info,products,time}=req.body;
         var price;
         for(let i=0;i<products.length;i++){
             price=0
             for(let j=0;j<vmInfo.length;j++){
                 const priceOfOneSku=await fetchPrice(productInfo,vmInfo[j].productName,vmInfo[j].skuName,products[i].term)
-                console.log(priceOfOneSku)
-                price+=priceOfOneSku
+                price+=(products[i].term=="PAYG"?priceOfOneSku*720:priceOfOneSku)
             }
             products[i]={...products[i],price}
         }
         const totalPrice=products.reduce((acc,curr)=>acc+curr.price,0)
-        const data = new Enquiries({ email,products,totalPrice,...info })
-        const enquiry = await data.save()
+        const data = new Enquiries({ email,products,totalPrice,...info,time })
+        const enquiry = await data.save()  
         res.json(enquiry)
     }
     catch (err) {   
@@ -107,7 +108,7 @@ app.post("/createEnquiry",async(req,res)=>{
         res.status(500).json({ err });
     }
 })
-
+   
 
 app.post("/isUserExist",async(req,res)=>{
     const {email}=req.body;
@@ -128,10 +129,10 @@ app.post("/getEnquiries",async(req,res)=>{
 
         const enquires=await Enquiries.find({email})
         if(enquires.length){
-            const data=enquires.map(enquiry=>{
-                const {oppurtunity,csp,region,products,totalPrice,createdAt}=enquiry
+            const data=enquires.map(enquiry=>{  
+                const {oppurtunity,csp,region,products,totalPrice,time}=enquiry
                 return {
-                    oppurtunity,csp,region,products,totalPrice,createdAt
+                    oppurtunity,csp,region,products,totalPrice,time
                 }  
             })
             return res.send(data)
