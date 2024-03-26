@@ -130,9 +130,9 @@ app.post("/getEnquiries",async(req,res)=>{
         const enquires=await Enquiries.find({email})
         if(enquires.length){
             const data=enquires.map(enquiry=>{  
-                const {oppurtunity,csp,region,products,totalPrice,time}=enquiry
+                const {oppurtunity,csp,region,products,totalPrice,createdAt}=enquiry
                 return {
-                    oppurtunity,csp,region,products,totalPrice,time
+                    oppurtunity,csp,region,products,totalPrice,createdAt
                 }  
             })
             return res.send(data)
